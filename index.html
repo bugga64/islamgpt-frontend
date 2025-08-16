@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>IslamGPT - Modern Islamic AI Assistant</title>
+    <meta name="theme-color" content="#001122">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #001122 0%, #00274C 50%, #001a33 100%);
+            --gold: #FFCB05;
+            --gold-light: #FFD700;
+            --surface: rgba(0, 17, 34, 0.85);
+            --surface-hover: rgba(0, 17, 34, 0.95);
+            --border: rgba(255, 203, 5, 0.2);
+            --border-focus: rgba(255, 203, 5, 0.5);
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.25);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --radius-lg: 24px;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+            font-feature-settings: 'cv11', 'ss01';
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Onboarding Styles */
+        .onboarding {
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: var(--primary-gradient);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .onboarding.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .step-page {
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            opacity: 0; 
+            transform: translateX(60px);
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            pointer-events: none;
+            padding: 20px;
+        }
+
+        .step-page.active { 
+            opacity: 1; 
+            transform: translateX(0); 
+            pointer-events: all; 
+        }
+        
+        .step-page.prev { 
+            transform: translateX(-60px); 
+        }
+
+        .step-content {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 40px 30px;
+            text-align: center; 
+            max-width: 420px; 
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .crescent-logo {
+            font-size: 3.5rem; 
+            margin-bottom: 20px; 
+            color: var(--gold);
+            animation: gentlePulse 4s ease-in-out infinite;
+            filter: drop-shadow(0 4px 8px rgba(255, 203, 5, 0.3));
+        }
+
+        @keyframes gentlePulse { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.05); } 
+        }
+
+        .arabic-greeting {
+            font-size: 1.5rem; 
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            background-clip: text; 
+            font-weight: 600;
+        }
+
+        .welcome-text { 
+            font-size: 1rem; 
+            color: var(--text-secondary); 
+            margin-bottom: 30px; 
+            line-height: 1.6; 
+        }
+
+        .step-number { 
+            color: var(--gold); 
+            font-size: 13px; 
+            font-weight: 600; 
+            margin-bottom: 10px; 
+            opacity: 0.8;
+        }
+        
+        .step-title { 
+            color: var(--gold); 
+            font-size: 1.5rem; 
+            margin-bottom: 12px; 
+            font-weight: 600; 
+        }
+        
+        .step-subtitle { 
+            color: var(--text-secondary); 
+            font-size: 0.95rem; 
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        /* Location help text */
+        .location-help {
+            background: rgba(255, 203, 5, 0.08);
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin: 16px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .location-help strong {
+            color: var(--gold);
+        }
+
+        .location-examples {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 203, 5, 0.1);
+        }
+
+        .location-examples div {
+            margin: 4px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Form Elements */
+        .form-group { 
+            margin-bottom: 24px; 
+        }
+        
+        .form-input, .form-select {
+            width: 100%; 
+            padding: 16px 20px;
+            background: rgba(0, 17, 34, 0.6); 
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm); 
+            color: var(--text-primary); 
+            font-size: 16px;
+            font-weight: 400;
+            outline: none;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.1);
+            background: rgba(0, 17, 34, 0.8);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 16px 28px;
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122;
+            box-shadow: 0 4px 16px rgba(255, 203, 5, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 203, 5, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+            border: 2px solid rgba(148, 163, 184, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(148, 163, 184, 0.25);
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Bookmark button */
+        .bookmark-btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+        }
+
+        .bookmark-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 203, 5, 0.4);
+        }
+
+        /* Main App */
+        .main-app { 
+            display: none; 
+            min-height: 100vh; 
+            padding: 0;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .main-app.fade-in {
+            opacity: 1;
+        }
+
+        .app-header {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .app-title {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            background-clip: text; 
+            font-weight: 700; 
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            font-size: 14px; 
+            color: var(--text-secondary); 
+            background: rgba(16, 185, 129, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-indicator.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+        
+        .status-dot { 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            background: var(--success); 
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: var(--error);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Content Area */
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 100px;
+        }
+
+        .disclaimer {
+            background: rgba(239, 68, 68, 0.08); 
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-sm); 
+            padding: 16px 20px; 
+            margin: 20px 0; 
+            color: #fca5a5;
+            font-size: 14px; 
+            line-height: 1.5;
+        }
+
+        /* Tab System */
+        .tab-content { 
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.show { 
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Enhanced Chat Interface */
+        .chat-container {
+            background: linear-gradient(135deg, var(--surface), rgba(0, 17, 34, 0.9));
+            border-radius: var(--radius-lg);
+            height: calc(100vh - 220px);
+            max-height: 800px;
+            display: flex; 
+            flex-direction: column;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow-lg);
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.12), rgba(255, 203, 5, 0.06));
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.08) 0%, transparent 70%);
+            animation: islamicRotate 20s linear infinite;
+        }
+
+        .chat-header > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .chat-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
+        .chat-messages { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 24px;
+            scroll-behavior: smooth;
+            background: linear-gradient(180deg, rgba(0, 17, 34, 0.02), rgba(255, 203, 5, 0.01));
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 203, 5, 0.1);
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gold), var(--gold-light));
+            border-radius: 4px;
+            border: 1px solid rgba(0, 17, 34, 0.2);
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: var(--gold-light);
+        }
+        
+        .message { 
+            margin-bottom: 24px; 
+            animation: messageSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        @keyframes messageSlideIn { 
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.95); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            } 
+        }
+
+        .message.user { 
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .message.bot { 
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 75%; 
+            padding: 18px 22px;
+            border-radius: 20px; 
+            font-size: 15px; 
+            line-height: 1.6;
+            word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122; 
+            font-weight: 500;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 20px rgba(255, 203, 5, 0.3);
+        }
+
+        .message.user .message-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 8px 0 0 8px;
+            border-color: transparent transparent transparent var(--gold-light);
+        }
+
+        .message.bot .message-bubble {
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.8), rgba(0, 17, 34, 0.6));
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .message.bot .message-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 8px 8px 0 0;
+            border-color: transparent rgba(0, 17, 34, 0.8) transparent transparent;
+        }
+
+        /* Beautiful Thinking Animation */
+        .thinking-message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.1), rgba(255, 203, 5, 0.05));
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-radius: 20px;
+            border-bottom-left-radius: 8px;
+            max-width: 75%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .thinking-message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 203, 5, 0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .thinking-icon {
+            font-size: 1.2rem;
+            animation: thinkingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes thinkingPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .thinking-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gold);
+            animation: thinkingDot 1.4s ease-in-out infinite;
+        }
+
+        .thinking-dot:nth-child(1) { animation-delay: 0s; }
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinkingDot {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .thinking-text {
+            color: var(--gold);
+            font-weight: 600;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .chat-input-container { 
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.4), rgba(0, 17, 34, 0.2));
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-input-wrapper {
+            display: flex; 
+            gap: 16px; 
+            align-items: flex-end;
+            max-width: 100%;
+        }
+
+        .chat-input {
+            flex: 1; 
+            padding: 18px 24px;
+            background: rgba(0, 17, 34, 0.7); 
+            border: 2px solid var(--border);
+            border-radius: 25px; 
+            color: var(--text-primary); 
+            font-size: 16px; 
+            resize: none; 
+            min-height: 56px; 
+            max-height: 120px;
+            outline: none;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.15);
+            background: rgba(0, 17, 34, 0.8);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 50%;
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 20px;
+            width: 56px; 
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(255, 203, 5, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .send-btn:hover::before {
+            left: 100%;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 203, 5, 0.5);
+        }
+
+        .send-btn:active:not(:disabled) {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        /* Grid Layouts */
+        .grid {
+            display: grid;
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .duas-grid { 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .prayer-grid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            border-color: var(--border-focus);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card:active {
+            transform: translateY(0);
+        }
+
+        .card h3 { 
+            color: var(--gold); 
+            margin-bottom: 8px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card p { 
+            color: var(--text-secondary); 
+            line-height: 1.5; 
+            font-size: 14px; 
+        }
+
+        /* Prayer Cards */
+        .prayer-card {
+            text-align: center;
+            padding: 16px;
+        }
+
+        .prayer-name {
+            color: var(--gold);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .prayer-time {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .prayer-note {
+            color: var(--text-muted);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* Enhanced Quran Interface */
+        .quran-container {
+            height: calc(100vh - 220px);
+            max-height: 800px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        .quran-header {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.12), rgba(255, 203, 5, 0.06));
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quran-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.08) 0%, transparent 60%);
+            animation: islamicRotate 25s linear infinite;
+        }
+
+        .quran-header > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .back-btn {
+            background: var(--surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--surface-hover);
+            border-color: var(--gold);
+            color: var(--gold);
+            transform: translateY(-1px);
+        }
+
+        .quran-content {
+            height: calc(100% - 90px);
+            overflow-y: auto;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.02), rgba(255, 203, 5, 0.01));
+        }
+
+        .quran-search {
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(0, 17, 34, 0.6);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(255, 203, 5, 0.1);
+            background: rgba(0, 17, 34, 0.8);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Enhanced Surah Items */
+        .surah-item {
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.6), rgba(0, 17, 34, 0.4));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .surah-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 203, 5, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .surah-item:hover::before {
+            left: 100%;
+        }
+
+        .surah-item:hover {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.08), rgba(255, 203, 5, 0.04));
+            transform: translateY(-2px) translateX(4px);
+            border-color: var(--gold);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .surah-info {
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .surah-name {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .surah-name::before {
+            content: '📖';
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .surah-english {
+            color: var(--text-secondary);
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Beautiful Book Page Design for Verses */
+        .verse-container {
+            background: linear-gradient(135deg, 
+                rgba(255, 203, 5, 0.05) 0%, 
+                rgba(255, 203, 5, 0.02) 50%, 
+                rgba(0, 17, 34, 0.1) 100%);
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-left: 4px solid var(--gold);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 20px;
+            cursor: default;
+            display: block;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Book page texture effect */
+        .verse-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 203, 5, 0.05) 0%, transparent 30%),
+                radial-gradient(circle at 80% 80%, rgba(255, 203, 5, 0.03) 0%, transparent 30%),
+                linear-gradient(45deg, 
+                    rgba(255, 203, 5, 0.02) 25%, 
+                    transparent 25%, 
+                    transparent 75%, 
+                    rgba(255, 203, 5, 0.02) 75%);
+            background-size: 
+                200px 200px,
+                150px 150px,
+                20px 20px;
+            opacity: 0.4;
+            z-index: 1;
+        }
+
+        /* Elegant verse number badge */
+        .verse-container::after {
+            content: attr(data-verse);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 3px 10px rgba(255, 203, 5, 0.3);
+            z-index: 3;
+        }
+
+        .verse-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .verse-arabic {
+            font-size: 1.6rem;
+            line-height: 2.2;
+            text-align: right;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .verse-translation {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 15px;
+            margin-bottom: 16px;
+            font-style: italic;
+            opacity: 0.95;
+        }
+
+        .verse-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 203, 5, 0.15);
+        }
+
+        .verse-meta {
+            color: var(--gold);
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        /* Surah Info Card Enhancement */
+        .surah-info-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 203, 5, 0.1), 
+                rgba(255, 203, 5, 0.05));
+            border: 1px solid rgba(255, 203, 5, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .surah-info-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.08) 0%, transparent 70%);
+            animation: islamicRotate 30s linear infinite;
+        }
+
+        @keyframes islamicRotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .surah-info-card > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .surah-title {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .surah-title::before,
+        .surah-title::after {
+            content: '✦';
+            font-size: 1.2rem;
+            opacity: 0.6;
+        }
+
+        .surah-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        /* Enhanced Duas Page */
+        .duas-header {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.12), rgba(255, 203, 5, 0.06));
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .duas-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.08) 0%, transparent 70%);
+            animation: islamicRotate 25s linear infinite;
+        }
+
+        .duas-header > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .duas-title {
+            color: var(--gold);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .duas-title::before,
+        .duas-title::after {
+            content: '🤲';
+            font-size: 1.5rem;
+            opacity: 0.8;
+        }
+
+        .inspirational-quote {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.1), rgba(255, 203, 5, 0.05));
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .inspirational-quote::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.06) 0%, transparent 70%);
+            animation: islamicRotate 30s linear infinite;
+        }
+
+        .inspirational-quote > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .quote-text {
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            line-height: 1.8;
+            font-style: italic;
+            margin-bottom: 12px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .quote-source {
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .quote-decoration {
+            color: var(--gold);
+            font-size: 2rem;
+            opacity: 0.6;
+            margin-bottom: 16px;
+        }
+
+        /* Enhanced Duas Cards */
+        .duas-grid .card {
+            background: linear-gradient(135deg, rgba(0, 17, 34, 0.8), rgba(0, 17, 34, 0.6));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .duas-grid .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 203, 5, 0.12), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .duas-grid .card:hover::before {
+            left: 100%;
+        }
+
+        .duas-grid .card:hover {
+            transform: translateY(-6px) scale(1.02);
+            border-color: var(--gold);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.08), rgba(255, 203, 5, 0.04));
+        }
+
+        .duas-grid .card h3 {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .duas-grid .card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Enhanced Dua Detail View */
+        .dua-detail-card {
+            background: linear-gradient(135deg, 
+                rgba(255, 203, 5, 0.06), 
+                rgba(255, 203, 5, 0.02), 
+                rgba(0, 17, 34, 0.1));
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-left: 4px solid var(--gold);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .dua-detail-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(255, 203, 5, 0.04) 0%, transparent 30%),
+                radial-gradient(circle at 75% 75%, rgba(255, 203, 5, 0.02) 0%, transparent 30%);
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .dua-detail-card > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .dua-occasion-badge {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122;
+            padding: 10px 18px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: inline-block;
+            box-shadow: 0 3px 12px rgba(255, 203, 5, 0.3);
+        }
+
+        .dua-arabic-text {
+            font-size: 1.8rem;
+            line-height: 2.4;
+            text-align: right;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            font-weight: 500;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .dua-transliteration {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 16px;
+            font-style: italic;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .dua-translation {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Daily Verse Feature */
+        .daily-verse-container {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.15), rgba(255, 203, 5, 0.08));
+            border: 1px solid rgba(255, 203, 5, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin: 20px 0 30px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(255, 203, 5, 0.2);
+        }
+
+        .daily-verse-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.1) 0%, transparent 70%);
+            animation: islamicRotate 35s linear infinite;
+        }
+
+        .daily-verse-container > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .daily-verse-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .daily-verse-title {
+            color: var(--gold);
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .verse-refresh-btn {
+            background: rgba(255, 203, 5, 0.1);
+            border: 1px solid rgba(255, 203, 5, 0.3);
+            color: var(--gold);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .verse-refresh-btn:hover {
+            background: rgba(255, 203, 5, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .daily-verse-content {
+            margin: 20px 0;
+        }
+
+        .daily-verse-arabic {
+            font-size: 1.5rem;
+            line-height: 2.2;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-weight: 500;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .daily-verse-translation {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .daily-verse-source {
+            color: var(--gold);
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(255, 203, 5, 0.1);
+            padding: 6px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .verse-type-indicator {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #001122;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Enhanced Prayer Times Styles */
+        .prayer-times-header {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.1), rgba(255, 203, 5, 0.05));
+            border: 1px solid rgba(255, 203, 5, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prayer-times-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 203, 5, 0.05) 0%, transparent 70%);
+            animation: islamicRotate 20s linear infinite;
+        }
+
+        .prayer-times-title {
+            position: relative;
+            z-index: 2;
+            color: var(--gold);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .prayer-times-subtitle {
+            position: relative;
+            z-index: 2;
+            color: var(--text-secondary);
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .current-prayer-indicator {
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            display: inline-block;
+            animation: gentlePulse 2s ease-in-out infinite;
+        }
+
+        .prayer-times-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .enhanced-prayer-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .enhanced-prayer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 203, 5, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .enhanced-prayer-card:hover::before {
+            left: 100%;
+        }
+
+        .enhanced-prayer-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--gold);
+        }
+
+        .enhanced-prayer-card.current-prayer {
+            background: linear-gradient(135deg, rgba(255, 203, 5, 0.15), rgba(255, 203, 5, 0.08));
+            border-color: var(--gold);
+            box-shadow: 0 8px 32px rgba(255, 203, 5, 0.3);
+        }
+
+        .prayer-icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(255, 203, 5, 0.3));
+        }
+
+        .enhanced-prayer-name {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .enhanced-prayer-time {
+            color: var(--text-primary);
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-family: 'Inter', monospace;
+        }
+
+        .prayer-status {
+            font-size: 11px;
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+
+        .islamic-pattern-bg {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .islamic-pattern-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(circle at 25% 25%, rgba(255, 203, 5, 0.1) 0%, transparent 50%),
+                              radial-gradient(circle at 75% 75%, rgba(255, 203, 5, 0.08) 0%, transparent 50%);
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        .location-info {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .location-title {
+            color: var(--gold);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .location-details {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .next-prayer-countdown {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .next-prayer-countdown::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(16, 185, 129, 0.05) 25%, transparent 25%),
+                        linear-gradient(-45deg, rgba(16, 185, 129, 0.05) 25%, transparent 25%);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+
+        .countdown-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .countdown-title {
+            color: var(--success);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .countdown-time {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .countdown-subtitle {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-around;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-muted);
+            min-width: 70px;
+            position: relative;
+        }
+
+        .nav-item.active {
+            color: var(--gold);
+            background: rgba(255, 203, 5, 0.08);
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: var(--gold);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .nav-item.active::before {
+            width: 24px;
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            margin-bottom: 6px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .app-title { font-size: 1.5rem; }
+            .step-content { padding: 30px 20px; }
+            .chat-container { height: calc(100vh - 180px); }
+            .quran-container { height: calc(100vh - 180px); }
+            .prayer-grid { grid-template-columns: repeat(2, 1fr); }
+            .duas-grid { grid-template-columns: 1fr; }
+            .content-wrapper { padding: 0 16px 100px; }
+            .header-content { flex-direction: column; gap: 12px; }
+            .status-indicator { font-size: 12px; padding: 6px 12px; }
+            .prayer-times-container { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .enhanced-prayer-card { padding: 20px 16px; }
+            .prayer-icon { font-size: 2rem; }
+            .enhanced-prayer-time { font-size: 1.2rem; }
+        }
+
+        @media (max-width: 480px) {
+            .message-bubble { max-width: 85%; }
+            .card { padding: 16px; }
+            .chat-input-container { padding: 16px; }
+            .prayer-times-container { grid-template-columns: repeat(3, 1fr); }
+            .enhanced-prayer-card { padding: 16px 12px; }
+            .prayer-icon { font-size: 1.8rem; margin-bottom: 8px; }
+            .enhanced-prayer-name { font-size: 14px; }
+            .enhanced-prayer-time { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding" id="onboarding">
+        
+        <!-- Welcome Page -->
+        <div class="step-page active" id="welcomePage">
+            <div class="step-content">
+                <div class="crescent-logo">☪️</div>
+                <div class="arabic-greeting">السلام عليكم ورحمة الله وبركاته</div>
+                <div style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 20px; font-style: italic;">Asalam alaykum rahmatu illahi wa barakutu</div>
+                <p class="welcome-text">Welcome to IslamGPT - Your comprehensive Islamic AI assistant with guidance from all schools of Islamic thought</p>
+                <button class="btn btn-primary" onclick="goToStep(1)">Begin Setup</button>
+            </div>
+        </div>
+
+        <!-- Step 1: Name -->
+        <div class="step-page" id="step1">
+            <div class="step-content">
+                <div class="step-number">STEP 1 OF 4</div>
+                <h2 class="step-title">What is your name?</h2>
+                <p class="step-subtitle">This helps us personalize your Islamic learning experience</p>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="userName" placeholder="Enter your name" />
+                </div>
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="goToStep('welcome')">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(2)">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: School of Thought -->
+        <div class="step-page" id="step2">
+            <div class="step-content">
+                <div class="step-number">STEP 2 OF 4</div>
+                <h2 class="step-title">What's your religious background?</h2>
+                <p class="step-subtitle">This helps us provide appropriate guidance. All backgrounds welcome</p>
+                <div class="form-group">
+                    <select class="form-select" id="userSchool">
+                        <option value="">Select your background</option>
+                        
+                        <optgroup label="🕌 Sunni Schools of Jurisprudence">
+                            <option value="hanafi">Hanafi</option>
+                            <option value="shafii">Shafi'i</option>
+                            <option value="maliki">Maliki</option>
+                            <option value="hanbali">Hanbali</option>
+                            <option value="zahiri">Zahiri</option>
+                        </optgroup>
+                        
+                        <optgroup label="🏛️ Shia Schools">
+                            <option value="twelver">Twelver Shia (Ja'fari)</option>
+                            <option value="ismaili">Ismaili</option>
+                            <option value="zaidi">Zaidi</option>
+                        </optgroup>
+                        
+                        <optgroup label="🌟 Sufi Orders">
+                            <option value="qadiriyya">Qadiriyya</option>
+                            <option value="naqshbandi">Naqshbandi</option>
+                            <option value="chishti">Chishti</option>
+                        </optgroup>
+                        
+                        <optgroup label="🤝 Non-Muslim & General">
+                            <option value="non_muslim_interested">Interested in Learning About Islam</option>
+                            <option value="general_muslim">Just Muslim (General)</option>
+                            <option value="prefer_not_to_share">Prefer Not to Share</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Language -->
+        <div class="step-page" id="step3">
+            <div class="step-content">
+                <div class="step-number">STEP 3 OF 4</div>
+                <h2 class="step-title">What language do you prefer?</h2>
+                <p class="step-subtitle">Choose your preferred language for Islamic guidance</p>
+                <div class="form-group">
+                    <select class="form-select" id="userLanguage">
+                        <option value="">Select your language</option>
+                        <option value="English">🇺🇸 English</option>
+                        <option value="Arabic">🇸🇦 العربية (Arabic)</option>
+                        <option value="Urdu">🇵🇰 اردو (Urdu)</option>
+                        <option value="Turkish">🇹🇷 Türkçe (Turkish)</option>
+                        <option value="Persian">🇮🇷 فارسی (Persian/Farsi)</option>
+                        <option value="French">🇫🇷 Français (French)</option>
+                        <option value="Spanish">🇪🇸 Español (Spanish)</option>
+                        <option value="Indonesian">🇮🇩 Bahasa Indonesia</option>
+                        <option value="Bengali">🇧🇩 বাংলা (Bengali)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+                    <button class="btn btn-primary" onclick="goToStep(4)">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Enhanced Location -->
+        <div class="step-page" id="step4">
+            <div class="step-content">
+                <div class="step-number">STEP 4 OF 4</div>
+                <h2 class="step-title">📍 Your Location for Prayer Times</h2>
+                <p class="step-subtitle">We need your location to provide accurate prayer times and find local Islamic resources</p>
+                
+                <div class="location-help">
+                    <strong>🎯 Why we need this:</strong>
+                    <ul style="margin: 8px 0; padding-left: 20px; text-align: left;">
+                        <li>Calculate precise prayer times for your area</li>
+                        <li>Find nearby mosques and Islamic centers</li>
+                        <li>Provide location-specific Islamic guidance</li>
+                        <li>Adjust for local sunrise/sunset times</li>
+                    </ul>
+                    
+                    <div class="location-examples">
+                        <strong>✅ Good examples:</strong>
+                        <div>• New York, NY, USA</div>
+                        <div>• London, England, UK</div>
+                        <div>• Dubai, UAE</div>
+                        <div>• Lahore, Punjab, Pakistan</div>
+                        <div>• Istanbul, Turkey</div>
+                        <div>• Cairo, Egypt</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" class="form-input" id="userLocation" 
+                           placeholder="Enter: City, State/Province, Country" 
+                           style="text-align: center;" />
+                </div>
+                
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">
+                    💡 <strong>Privacy:</strong> Your location is only used for prayer times and Islamic resources. We don't track or store your movements.
+                </div>
+                
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">Back</button>
+                    <button class="btn btn-primary" onclick="startApp()">Start Using IslamGPT</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="main-app" id="mainApp">
+        <div class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">☪️ IslamGPT</h1>
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="backendStatus">Connecting...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Daily Verse Feature -->
+            <div class="daily-verse-container" id="dailyVerseContainer">
+                <div class="verse-type-indicator" id="verseTypeIndicator">Quran</div>
+                <div class="daily-verse-header">
+                    <div class="daily-verse-title">
+                        <span>✨</span>
+                        <span>Daily Inspiration</span>
+                        <span>✨</span>
+                    </div>
+                    <button class="verse-refresh-btn" onclick="refreshDailyVerse()">🔄 New Verse</button>
+                </div>
+                <div class="daily-verse-content">
+                    <div class="daily-verse-arabic" id="dailyVerseArabic">Loading...</div>
+                    <div class="daily-verse-translation" id="dailyVerseTranslation">Loading...</div>
+                    <div class="daily-verse-source" id="dailyVerseSource">Loading...</div>
+                </div>
+            </div>
+
+            <!-- CHAT TAB -->
+            <div class="tab-content show" id="chatTab">
+                <div class="disclaimer">
+                    <strong>Important:</strong> This AI assistant provides educational information about Islamic topics. For authoritative religious rulings (fatwa), please consult qualified Islamic scholars in your community.
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-title">
+                            <span>🤖</span>
+                            <span>Islamic AI Assistant</span>
+                        </div>
+                        <div class="chat-subtitle">Powered by Local AI - Ask anything about Islam</div>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <div class="message-bubble">
+                                السلام عليكم! (Asalam alaykum!) I'm your Islamic AI assistant. Ask me anything about Islam, and I'll provide educational information while encouraging you to consult qualified scholars for religious guidance.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <textarea class="chat-input" id="chatInput" placeholder="Ask about Islam..." onkeypress="handleChatKeyPress(event)" rows="1"></textarea>
+                            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                                <span>➤</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DUAS TAB -->
+            <div class="tab-content" id="duasTab">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading Duas...</div>
+                </div>
+            </div>
+
+            <!-- QURAN TAB -->
+            <div class="tab-content" id="quranTab">
+                <div class="quran-container">
+                    <div class="quran-header">
+                        <button class="back-btn" id="backToSurahs" onclick="showSurahList()">← Back</button>
+                        <h2 style="color: var(--gold); margin: 0; flex: 1; text-align: center; font-size: 1.4rem;" id="quranTitle">Holy Quran</h2>
+                    </div>
+                    <div class="quran-content" id="quranContent">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div>
+                                <div style="margin-bottom: 8px;">Loading Quran chapters...</div>
+                                <div style="font-size: 12px; opacity: 0.7;">Please wait</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRAYER TAB -->
+            <div class="tab-content" id="prayerTab">
+                <div class="prayer-times-header">
+                    <div class="prayer-times-title">
+                        <span>🕌</span>
+                        <span>Prayer Times</span>
+                        <span>☪️</span>
+                    </div>
+                    <div class="prayer-times-subtitle">
+                        "And establish prayer and give zakah and bow with those who bow"
+                    </div>
+                    <div class="current-prayer-indicator" id="currentPrayerIndicator">
+                        ⏰ Loading prayer times...
+                    </div>
+                </div>
+
+                <div class="prayer-times-container" id="prayerTimesContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div>Loading accurate prayer times...</div>
+                    </div>
+                </div>
+
+                <div class="islamic-pattern-bg">
+                    <div class="location-info">
+                        <div class="location-title">
+                            <span>📍</span>
+                            <span>Location & Method</span>
+                        </div>
+                        <div class="location-details" id="prayerLocation">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="nav-container">
+            <div class="nav-item active" onclick="switchTab('chat')">
+                <div class="nav-icon">💬</div>
+                <div class="nav-label">Chat</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('duas')">
+                <div class="nav-icon">🤲</div>
+                <div class="nav-label">Duas</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('quran')">
+                <div class="nav-icon">📖</div>
+                <div class="nav-label">Quran</div>
+            </div>
+            <div class="nav-item" onclick="switchTab('prayer')">
+                <div class="nav-icon">🕌</div>
+                <div class="nav-label">Prayer</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 IslamGPT Web Connected Version Loading...');
+
+        // Configuration - Update this to match your backend
+        const BACKEND_URL = 'https://04286f15f05c.ngrok-free.app';
+
+        let currentStep = 'welcome';
+        let userProfile = {};
+        let currentBookmark = null;
+        let backendConnected = false;
+
+        // Daily Verse Database (local fallback)
+        const DAILY_VERSES = {
+            quran: [
+                {
+                    arabic: "وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا",
+                    translation: "And whoever fears Allah - He will make for him a way out",
+                    source: "Quran 65:2"
+                },
+                {
+                    arabic: "إِنَّ مَعَ الْعُسْرِ يُسْرًا",
+                    translation: "Indeed, with hardship comes ease",
+                    source: "Quran 94:6"
+                },
+                {
+                    arabic: "وَاللَّهُ مَعَ الصَّابِرِينَ",
+                    translation: "And Allah is with the patient",
+                    source: "Quran 2:153"
+                }
+            ],
+            duas: [
+                {
+                    arabic: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+                    translation: "Our Lord, give us good in this world and good in the next world and protect us from the punishment of the Fire",
+                    source: "Dua from Quran 2:201"
+                },
+                {
+                    arabic: "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+                    translation: "O Allah, help me to remember You, to thank You, and to worship You in the best manner",
+                    source: "Dua from Hadith"
+                }
+            ]
+        };
+
+        let currentDailyVerse = null;
+
+        // Backend Connection Functions
+        async function checkBackendHealth() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/health`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    backendConnected = true;
+                    updateStatus('Connected to Backend', 'success');
+                    console.log('✅ Backend connected:', data);
+                    return true;
+                }
+            } catch (error) {
+                console.log('❌ Backend connection failed:', error);
+                backendConnected = false;
+                updateStatus('Backend Offline - Using Demo Mode', 'error');
+                return false;
+            }
+        }
+
+        function updateStatus(message, type = 'success') {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusDot = document.getElementById('statusDot');
+            const backendStatus = document.getElementById('backendStatus');
+            
+            backendStatus.textContent = message;
+            
+            if (type === 'error') {
+                statusIndicator.classList.add('error');
+                statusDot.classList.add('error');
+            } else {
+                statusIndicator.classList.remove('error');
+                statusDot.classList.remove('error');
+            }
+        }
+
+        // API Functions
+        async function sendMessageToBackend(message) {
+            if (!backendConnected) {
+                return {
+                    success: false,
+                    response: "I'm currently in demo mode. The backend AI isn't connected, but I can still help with basic Islamic information!"
+                };
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        userProfile: userProfile
+                    })
+                });
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Chat API error:', error);
+                return {
+                    success: false,
+                    error: 'Connection error. Please check if the backend is running.'
+                };
+            }
+        }
+
+        async function loadDuasFromBackend() {
+            if (!backendConnected) {
+                showDuasMenu(); // Load demo duas
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/duas`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDuasFromBackend(data.duas);
+                } else {
+                    showDuasMenu(); // Fallback to demo
+                }
+            } catch (error) {
+                console.error('Duas API error:', error);
+                showDuasMenu(); // Fallback to demo
+            }
+        }
+
+        async function loadPrayerTimesFromBackend() {
+            if (!backendConnected) {
+                loadDemoPrayerTimes();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/prayer-times`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
+                    body: JSON.stringify({
+                        location: userProfile.location || 'Dearborn, MI',
+                        userProfile: userProfile
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayPrayerTimes(data.prayer_times);
+                } else {
+                    loadDemoPrayerTimes();
+                }
+            } catch (error) {
+                console.error('Prayer times API error:', error);
+                loadDemoPrayerTimes();
+            }
+        }
+
+        async function loadQuranFromBackend(surahNumber = null) {
+            if (surahNumber) {
+                // Load specific surah
+                if (!backendConnected) {
+                    showNotification('Backend not connected - Limited Quran data available', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/quran/${surahNumber}`, {
+                        headers: {
+                            'ngrok-skip-browser-warning': 'true'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displaySurah(data.surah, surahNumber);
+                    } else {
+                        showNotification('Surah not available', 'error');
+                    }
+                } catch (error) {
+                    console.error('Quran API error:', error);
+                    showNotification('Error loading Surah', 'error');
+                }
+            } else {
+                // Load surah list
+                loadSurahList();
+            }
+        }
+
+        // UI Functions
+        function getRandomDailyVerse() {
+            const categories = ['quran', 'duas'];
+            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+            const verses = DAILY_VERSES[randomCategory];
+            const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+            
+            return {
+                ...randomVerse,
+                type: randomCategory === 'quran' ? 'Quran' : 'Dua'
+            };
+        }
+
+        function loadDailyVerse() {
+            currentDailyVerse = getRandomDailyVerse();
+            displayDailyVerse(currentDailyVerse);
+        }
+
+        function displayDailyVerse(verse) {
+            document.getElementById('dailyVerseArabic').textContent = verse.arabic;
+            document.getElementById('dailyVerseTranslation').textContent = verse.translation;
+            document.getElementById('dailyVerseSource').textContent = verse.source;
+            document.getElementById('verseTypeIndicator').textContent = verse.type;
+            
+            const container = document.getElementById('dailyVerseContainer');
+            container.style.animation = 'none';
+            container.offsetHeight;
+            container.style.animation = 'messageSlideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+
+        function refreshDailyVerse() {
+            document.getElementById('dailyVerseArabic').textContent = 'Loading...';
+            document.getElementById('dailyVerseTranslation').textContent = 'Getting new inspiration...';
+            document.getElementById('dailyVerseSource').textContent = 'Please wait...';
+            
+            setTimeout(() => {
+                loadDailyVerse();
+                showNotification('✨ New daily inspiration loaded!', 'success');
+            }, 800);
+        }
+
+        function goToStep(step) {
+            console.log('Going to step:', step);
+            
+            const currentPage = document.querySelector('.step-page.active');
+            if (currentPage) {
+                currentPage.classList.remove('active');
+                currentPage.classList.add('prev');
+            }
+            
+            setTimeout(function() {
+                if (currentPage) {
+                    currentPage.classList.remove('prev');
+                }
+                
+                let targetId;
+                if (step === 'welcome') {
+                    targetId = 'welcomePage';
+                } else {
+                    targetId = 'step' + step;
+                }
+                
+                const targetPage = document.getElementById(targetId);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                    currentStep = step;
+                }
+            }, 150);
+        }
+
+        async function startApp() {
+            userProfile.name = document.getElementById('userName').value.trim() || 'User';
+            userProfile.school = document.getElementById('userSchool').value || 'general_muslim';
+            userProfile.language = document.getElementById('userLanguage').value || 'English';
+            userProfile.location = document.getElementById('userLocation').value.trim() || 'Dearborn, MI';
+
+            console.log('Starting app with profile:', userProfile);
+
+            const onboarding = document.getElementById('onboarding');
+            const mainApp = document.getElementById('mainApp');
+            const bottomNav = document.getElementById('bottomNav');
+            
+            onboarding.classList.add('fade-out');
+            setTimeout(async function() {
+                onboarding.style.display = 'none';
+                mainApp.style.display = 'block';
+                bottomNav.style.display = 'block';
+                mainApp.classList.add('fade-in');
+                
+                // Check backend connection
+                await checkBackendHealth();
+                
+                // Load initial data
+                loadDailyVerse();
+                loadDuasFromBackend();
+                loadSurahList(); // Use enhanced function
+                loadPrayerTimesFromBackend();
+                
+            }, 800);
+        }
+
+        function switchTab(tab) {
+            console.log('Switching to tab:', tab);
+            
+            const allTabs = document.querySelectorAll('.tab-content');
+            const allNavItems = document.querySelectorAll('.nav-item');
+            
+            allTabs.forEach(function(content) {
+                content.classList.remove('show');
+            });
+            
+            allNavItems.forEach(function(item) {
+                item.classList.remove('active');
+            });
+            
+            const selectedTab = document.getElementById(tab + 'Tab');
+            if (selectedTab) {
+                selectedTab.classList.add('show');
+            }
+            
+            // Control daily verse visibility (only show in chat)
+            const dailyVerseContainer = document.getElementById('dailyVerseContainer');
+            if (dailyVerseContainer) {
+                dailyVerseContainer.style.display = tab === 'chat' ? 'block' : 'none';
+            }
+            
+            // Update active nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, index) => {
+                const tabs = ['chat', 'duas', 'quran', 'prayer'];
+                if (tabs[index] === tab) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Load tab-specific data
+            if (tab === 'duas') {
+                loadDuasFromBackend();
+            } else if (tab === 'quran') {
+                loadSurahList(); // Use the enhanced function
+            } else if (tab === 'prayer') {
+                loadPrayerTimesFromBackend();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            console.log('Sending message:', message);
+            
+            // Disable input while processing
+            sendBtn.disabled = true;
+            input.disabled = true;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            const typingMessage = addThinkingMessage();
+            
+            try {
+                const response = await sendMessageToBackend(message);
+                
+                // Remove thinking message
+                const messages = document.getElementById('chatMessages');
+                messages.removeChild(typingMessage.parentElement);
+                
+                if (response.success) {
+                    addMessage(response.response, 'bot');
+                } else {
+                    addMessage(response.error || 'Sorry, I encountered an error. Please try again.', 'bot');
+                }
+            } catch (error) {
+                console.error('Message send error:', error);
+                const messages = document.getElementById('chatMessages');
+                messages.removeChild(typingMessage.parentElement);
+                addMessage('Sorry, I couldn\'t process your message. Please check your connection and try again.', 'bot');
+            } finally {
+                // Re-enable input
+                sendBtn.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        function addMessage(message, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + sender;
+            
+            const formattedMessage = message
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = formattedMessage;
+            messageDiv.appendChild(bubble);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return bubble;
+        }
+
+        function addThinkingMessage() {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            
+            const thinkingBubble = document.createElement('div');
+            thinkingBubble.className = 'thinking-message';
+            thinkingBubble.innerHTML = `
+                <div class="thinking-icon">🤔</div>
+                <div class="thinking-dots">
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                </div>
+                <div class="thinking-text">Thinking...</div>
+            `;
+            
+            messageDiv.appendChild(thinkingBubble);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return thinkingBubble;
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Duas Functions
+        function displayDuasFromBackend(duasData) {
+            let content = `
+                <div class="inspirational-quote">
+                    <div class="quote-decoration">🤲</div>
+                    <div class="quote-text">
+                        "And when My servants ask you, [O Muhammad], concerning Me - indeed I am near. I respond to the invocation of the supplicant when he calls upon Me"
+                    </div>
+                    <div class="quote-source">— Quran 2:186</div>
+                </div>
+                
+                <div class="duas-header">
+                    <div class="duas-title">Authentic Islamic Duas</div>
+                    <div style="color: var(--text-secondary); font-size: 15px; line-height: 1.6;">
+                        Connect with Allah through these blessed supplications from the Quran and authentic Hadith
+                    </div>
+                </div>
+                
+                <div class="grid duas-grid">
+            `;
+
+            for (const [category, data] of Object.entries(duasData)) {
+                const icons = {
+                    'morning': '🌅',
+                    'forgiveness': '🤲',
+                    'protection': '🛡️',
+                    'success': '🎯',
+                    'food': '🍽️',
+                    'travel': '✈️',
+                    'sleep': '🛏️',
+                    'stress': '😌',
+                    'health': '🏥',
+                    'gratitude': '🙏',
+                    'study': '📚',
+                    'work': '💼'
+                };
+
+                const icon = icons[category] || '🤲';
+                content += `
+                    <div class="card" onclick="showDuasCategory('${category}')">
+                        <h3>${icon} ${data.title}</h3>
+                        <p>${data.items.length} authentic duas with references</p>
+                    </div>
+                `;
+            }
+
+            content += '</div>';
+            document.getElementById('duasTab').innerHTML = content;
+        }
+
+        function showDuasMenu() {
+            // Demo duas menu
+            const duasMenu = `
+                <div class="inspirational-quote">
+                    <div class="quote-decoration">🤲</div>
+                    <div class="quote-text">
+                        "And when My servants ask you, [O Muhammad], concerning Me - indeed I am near. I respond to the invocation of the supplicant when he calls upon Me"
+                    </div>
+                    <div class="quote-source">— Quran 2:186</div>
+                </div>
+                
+                <div class="duas-header">
+                    <div class="duas-title">Authentic Islamic Duas</div>
+                    <div style="color: var(--text-secondary); font-size: 15px; line-height: 1.6;">
+                        Connect with Allah through these blessed supplications from the Quran and authentic Hadith
+                        <br><small style="color: var(--warning);">Demo Mode - Connect backend for full database</small>
+                    </div>
+                </div>
+                
+                <div class="grid duas-grid">
+                    <div class="card" onclick="showNotification('Demo Mode: Connect backend for full duas database', 'info')">
+                        <h3>🌅 Morning & Evening</h3>
+                        <p>Essential duas with authentic references for starting and ending your day</p>
+                    </div>
+                    <div class="card" onclick="showNotification('Demo Mode: Connect backend for full duas database', 'info')">
+                        <h3>🤲 Forgiveness</h3>
+                        <p>Powerful istighfar duas for seeking Allah's mercy and forgiveness</p>
+                    </div>
+                    <div class="card" onclick="showNotification('Demo Mode: Connect backend for full duas database', 'info')">
+                        <h3>🛡️ Protection</h3>
+                        <p>Duas for safety from evil and seeking Allah's divine protection</p>
+                    </div>
+                    <div class="card" onclick="showNotification('Demo Mode: Connect backend for full duas database', 'info')">
+                        <h3>🎯 Success & Guidance</h3>
+                        <p>Duas for achieving goals and seeking Allah's guidance in decisions</p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('duasTab').innerHTML = duasMenu;
+        }
+
+        async function showDuasCategory(category) {
+            if (!backendConnected) {
+                showNotification('Backend not connected - Please start the backend server', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/duas/${category}`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDuaCategory(data.data, category);
+                } else {
+                    showNotification('Category not found', 'error');
+                }
+            } catch (error) {
+                console.error('Duas category error:', error);
+                showNotification('Error loading duas category', 'error');
+            }
+        }
+
+        function displayDuaCategory(duaData, category) {
+            let content = `
+                <div style="display: flex; align-items: center; margin-bottom: 30px; gap: 20px;">
+                    <button class="btn btn-secondary" onclick="loadDuasFromBackend()" style="flex-shrink: 0;">
+                        ← Back to Categories
+                    </button>
+                    <h2 style="color: var(--gold); margin: 0; flex: 1; text-align: center; font-size: 1.4rem;">${duaData.title}</h2>
+                </div>
+            `;
+            
+            duaData.items.forEach(function(dua) {
+                content += `
+                    <div class="dua-detail-card">
+                        <div class="dua-occasion-badge">
+                            ${dua.occasion} • ${dua.reference}
+                        </div>
+                        <div class="dua-arabic-text">
+                            ${dua.arabic}
+                        </div>
+                        <div class="dua-transliteration">
+                            ${dua.transliteration}
+                        </div>
+                        <div class="dua-translation">
+                            ${dua.translation}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('duasTab').innerHTML = content;
+        }
+
+        // Prayer Times Functions
+        function displayPrayerTimes(prayerData) {
+            const container = document.getElementById('prayerTimesContainer');
+            
+            const prayers = [
+                { key: 'fajr', name: 'Fajr', icon: '🌅', desc: 'Dawn Prayer' },
+                { key: 'sunrise', name: 'Sunrise', icon: '🌄', desc: 'Fajr ends' },
+                { key: 'dhuhr', name: 'Dhuhr', icon: '☀️', desc: 'Noon Prayer' },
+                { key: 'asr', name: 'Asr', icon: '🌇', desc: 'Afternoon Prayer' },
+                { key: 'maghrib', name: 'Maghrib', icon: '🌆', desc: 'Sunset Prayer' },
+                { key: 'isha', name: 'Isha', icon: '🌙', desc: 'Night Prayer' }
+            ];
+
+            let content = '';
+            prayers.forEach(prayer => {
+                const time = prayerData[prayer.key] || 'N/A';
+                content += `
+                    <div class="enhanced-prayer-card">
+                        <div class="prayer-icon">${prayer.icon}</div>
+                        <div class="enhanced-prayer-name">${prayer.name}</div>
+                        <div class="enhanced-prayer-time">${time}</div>
+                        <div class="prayer-status">${prayer.desc}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = content;
+
+            // Update location info
+            document.getElementById('prayerLocation').innerHTML = `
+                <strong>${prayerData.location || userProfile.location}</strong><br>
+                <span style="opacity: 0.8;">${prayerData.method || 'Standard Method'}</span><br>
+                <small style="opacity: 0.6;">${prayerData.source || 'Calculated'}</small>
+            `;
+
+            document.getElementById('currentPrayerIndicator').textContent = '✅ Prayer times loaded successfully';
+        }
+
+        function loadDemoPrayerTimes() {
+            const demoTimes = {
+                fajr: '5:00 AM',
+                sunrise: '6:30 AM',
+                dhuhr: '12:30 PM',
+                asr: '4:00 PM',
+                maghrib: '6:30 PM',
+                isha: '8:00 PM',
+                location: userProfile.location || 'Demo Location',
+                method: 'Demo Calculation',
+                source: 'Demo Mode'
+            };
+
+            displayPrayerTimes(demoTimes);
+        }
+
+        // Quran Functions - Enhanced API Integration
+        async function loadSurahList() {
+            // Show loading state
+            document.getElementById('quranContent').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading Quran index from server...</div>
+                </div>
+            `;
+
+            if (backendConnected) {
+                try {
+                    const response = await fetch(`${BACKEND_URL}/api/quran`, {
+                        headers: {
+                            'ngrok-skip-browser-warning': 'true'
+                        }
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displaySurahListFromAPI(data.surahs);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Failed to load Quran index from API:', error);
+                }
+            }
+
+            // Fallback to local list
+            displaySurahListLocal();
+        }
+
+        function displaySurahListFromAPI(surahs) {
+            let content = `
+                <div class="inspirational-quote">
+                    <div class="quote-decoration">📖</div>
+                    <div class="quote-text">
+                        "This is the Book about which there is no doubt, a guidance for those conscious of Allah"
+                    </div>
+                    <div class="quote-source">— Quran 2:2</div>
+                </div>
+                
+                <div class="quran-search">
+                    <input type="text" class="search-input" id="surahSearch" 
+                           placeholder="🔍 Search surahs by name or number..." 
+                           oninput="filterSurahs()" />
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; color: var(--success);">
+                    ✅ Connected to Quran API - All 114 Surahs Available
+                </div>
+                
+                <div id="surahList">
+            `;
+            
+            surahs.forEach(function(surah) {
+                content += `
+                    <div class="surah-item" data-name="${surah.name.toLowerCase()}" data-english="${surah.english_name.toLowerCase()}" onclick="loadSurahFromAPI(${surah.number})">
+                        <div class="surah-info">
+                            <div class="surah-name">${surah.number}. ${surah.name}</div>
+                            <div class="surah-english">${surah.english_name} • ${surah.verse_count} verses</div>
+                        </div>
+                    </div>
+                `;
+            });
+            content += '</div>';
+            
+            document.getElementById('quranContent').innerHTML = content;
+            document.getElementById('quranTitle').textContent = 'Holy Quran (114 Chapters)';
+            document.getElementById('backToSurahs').style.display = 'none';
+        }
+
+        function displaySurahListLocal() {
+            const allSurahs = [
+                {num: 1, name: 'Al-Fatiha', english: 'The Opening', verses: 7},
+                {num: 2, name: 'Al-Baqarah', english: 'The Cow', verses: 286},
+                {num: 3, name: 'Ali Imran', english: 'Family of Imran', verses: 200},
+                {num: 4, name: 'An-Nisa', english: 'The Women', verses: 176},
+                {num: 5, name: 'Al-Ma\'idah', english: 'The Table', verses: 120},
+                {num: 112, name: 'Al-Ikhlas', english: 'The Sincerity', verses: 4},
+                {num: 113, name: 'Al-Falaq', english: 'The Dawn', verses: 5},
+                {num: 114, name: 'An-Nas', english: 'Mankind', verses: 6}
+            ];
+
+            let content = `
+                <div class="inspirational-quote">
+                    <div class="quote-decoration">📖</div>
+                    <div class="quote-text">
+                        "This is the Book about which there is no doubt, a guidance for those conscious of Allah"
+                    </div>
+                    <div class="quote-source">— Quran 2:2</div>
+                </div>
+                
+                <div style="text-align: center; margin-bottom: 20px; padding: 10px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; color: var(--error);">
+                    ⚠️ Demo Mode - Connect backend for all 114 Surahs
+                </div>
+                
+                <div class="quran-search">
+                    <input type="text" class="search-input" id="surahSearch" 
+                           placeholder="🔍 Search surahs by name or number..." 
+                           oninput="filterSurahs()" />
+                </div>
+                
+                <div id="surahList">
+            `;
+            
+            allSurahs.forEach(function(surah) {
+                const availability = (surah.num === 1 || surah.num === 112) ? 
+                    ' (Available in demo)' : 
+                    ' (Connect backend to load)';
+                
+                content += `
+                    <div class="surah-item" data-name="${surah.name.toLowerCase()}" data-english="${surah.english.toLowerCase()}" onclick="loadSurahFromAPI(${surah.num})">
+                        <div class="surah-info">
+                            <div class="surah-name">${surah.num}. ${surah.name}</div>
+                            <div class="surah-english">${surah.english} • ${surah.verses} verses${availability}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            content += '</div>';
+            
+            document.getElementById('quranContent').innerHTML = content;
+            document.getElementById('quranTitle').textContent = 'Holy Quran (114 Chapters)';
+            document.getElementById('backToSurahs').style.display = 'none';
+        }
+
+        async function loadSurahFromAPI(surahNumber) {
+            console.log(`Loading Surah ${surahNumber} from API...`);
+            
+            // Show loading state
+            document.getElementById('quranContent').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Loading Surah ${surahNumber} from server...</div>
+                </div>
+            `;
+
+            if (!backendConnected) {
+                // Check if it's available in demo mode
+                if (surahNumber === 1 || surahNumber === 112) {
+                    loadDemoSurah(surahNumber);
+                } else {
+                    showNotification('Backend not connected - Only Al-Fatiha and Al-Ikhlas available in demo', 'warning');
+                    loadSurahList();
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/quran/${surahNumber}`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    displaySurah(data.surah, surahNumber);
+                    showNotification(`✅ Surah ${surahNumber} loaded successfully`, 'success');
+                } else {
+                    showNotification('Surah not available', 'error');
+                    loadSurahList();
+                }
+            } catch (error) {
+                console.error('Quran API error:', error);
+                showNotification('Error loading Surah from server', 'error');
+                loadSurahList();
+            }
+        }
+
+        function loadDemoSurah(surahNumber) {
+            const demoSurahs = {
+                1: {
+                    name: 'Al-Fatiha',
+                    english_name: 'The Opening',
+                    verses: [
+                        {number: 1, arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', translation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.'},
+                        {number: 2, arabic: 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', translation: '[All] praise is [due] to Allah, Lord of the worlds.'},
+                        {number: 3, arabic: 'الرَّحْمَٰنِ الرَّحِيمِ', translation: 'The Entirely Merciful, the Especially Merciful,'},
+                        {number: 4, arabic: 'مَالِكِ يَوْمِ الدِّينِ', translation: 'Sovereign of the Day of Recompense.'},
+                        {number: 5, arabic: 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ', translation: 'It is You we worship and You we ask for help.'},
+                        {number: 6, arabic: 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ', translation: 'Guide us to the straight path -'},
+                        {number: 7, arabic: 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ', translation: 'The path of those upon whom You have bestowed favor, not of those who have evoked [Your] anger or of those who are astray.'}
+                    ]
+                },
+                112: {
+                    name: 'Al-Ikhlas',
+                    english_name: 'The Sincerity',
+                    verses: [
+                        {number: 1, arabic: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', translation: 'In the name of Allah, the Entirely Merciful, the Especially Merciful.'},
+                        {number: 2, arabic: 'قُلْ هُوَ اللَّهُ أَحَدٌ', translation: 'Say, "He is Allah, [who is] One,'},
+                        {number: 3, arabic: 'اللَّهُ الصَّمَدُ', translation: 'Allah, the Eternal Refuge.'},
+                        {number: 4, arabic: 'لَمْ يَلِدْ وَلَمْ يُولَدْ', translation: 'He neither begets nor is born,'},
+                        {number: 5, arabic: 'وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ', translation: 'Nor is there to Him any equivalent."'}
+                    ]
+                }
+            };
+
+            const surah = demoSurahs[surahNumber];
+            if (surah) {
+                displaySurah(surah, surahNumber);
+                showNotification('📖 Demo Surah loaded', 'info');
+            } else {
+                showNotification('Surah not available in demo mode', 'warning');
+                loadSurahList();
+            }
+        }
+
+        function filterSurahs() {
+            const searchTerm = document.getElementById('surahSearch').value.toLowerCase();
+            const surahItems = document.querySelectorAll('.surah-item');
+            
+            surahItems.forEach(function(item) {
+                const name = item.getAttribute('data-name');
+                const english = item.getAttribute('data-english');
+                const number = item.textContent.split('.')[0];
+                
+                if (name.includes(searchTerm) || 
+                    english.includes(searchTerm) || 
+                    number.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function displaySurah(surah, surahNumber) {
+            document.getElementById('quranTitle').textContent = `${surahNumber}. ${surah.name}`;
+            document.getElementById('backToSurahs').style.display = 'block';
+            
+            let content = `
+                <div class="surah-info-card">
+                    <div class="surah-title">${surah.name}</div>
+                    <div class="surah-subtitle">${surah.english_name}</div>
+                    <div class="surah-verses-count">${surah.verses.length} verses</div>
+                </div>
+            `;
+            
+            surah.verses.forEach(function(verse) {
+                content += `
+                    <div class="verse-container" data-verse="${verse.number}" id="verse-${verse.number}">
+                        <div class="verse-content">
+                            <div class="verse-arabic">${verse.arabic}</div>
+                            <div class="verse-translation">${verse.translation}</div>
+                            <div class="verse-actions">
+                                <div class="verse-meta">Ayah ${verse.number}</div>
+                                <button class="bookmark-btn" onclick="saveBookmark(${surahNumber}, ${verse.number})">
+                                    📖 Bookmark
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('quranContent').innerHTML = content;
+        }
+
+        function showSurahList() {
+            loadSurahList();
+        }
+
+        function saveBookmark(surahNumber, verseNumber) {
+            currentBookmark = {
+                surah: surahNumber,
+                verse: verseNumber,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('Bookmark saved:', currentBookmark);
+            showNotification('📖 Reading position bookmarked!', 'success');
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? 'var(--error)' : type === 'warning' ? 'var(--warning)' : 'var(--success)'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: var(--radius-sm);
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Enhanced initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing IslamGPT web connected version...');
+            
+            // Setup textarea auto-resize
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+            }
+            
+            // Initial backend check
+            checkBackendHealth();
+            
+            console.log('✅ IslamGPT Web Connected Version Ready!');
+            console.log(`🔗 Backend URL: ${BACKEND_URL}`);
+            console.log('📝 Make sure your Flask backend is running on http://localhost:3001');
+        });
+
+        console.log('✅ IslamGPT Web Connected Version Loaded!');
+    </script>
+</body>
+</html>
